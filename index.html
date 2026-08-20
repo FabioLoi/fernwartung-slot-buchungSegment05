@@ -3,123 +3,896 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PC-Fernwartung – Slot-Buchung</title>
+<title>Segment 05 ALDS PC – Slot-Buchung</title>
+
 <style>
-  :root {
-    --bg: #f2f4f7;
-    --panel: #ffffff;
-    --panel-2: #f7f8fa;
-    --border: #d9dee5;
-    --text: #202a35;
-    --muted: #66717d;
-    --blue: #0076b9;
-    --blue-dark: #005b8f;
-    --blue-dim: #e3f2fa;
-    --amber: #f5a800;
-    --amber-dark: #c78300;
-    --red: #c62828;
-    --red-dim: #fdeaea;
-    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+:root {
+  --bg: #F6F6F6;
+  --panel: #FFFFFF;
+  --panel-2: #F6F6F6;
+  --border: #D0D0D0;
+  --text: #343434;
+  --muted: #646464;
+  --primary: #00893D;
+  --secondary: #005E46;
+  --tertiary: #476E75;
+  --success: #00893D;
+  --warning: #476E75;
+  --danger: #00893D;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  display: flex;
+  justify-content: center;
+  padding: 32px 16px 64px;
+}
+
+.app {
+  width: 100%;
+  max-width: 480px;
+}
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--primary);
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+h1 {
+  text-align: center;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 28px;
+}
+
+.ring-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 22px;
+  position: relative;
+}
+
+.ring {
+  width: 176px;
+  height: 176px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.ring::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--ring-color, var(--primary))
+    calc(var(--pct, 100) * 1%),
+    #D0D0D0 0
+  );
+
+  -webkit-mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - 10px),
+    #000 calc(100% - 9px)
+  );
+
+  mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - 10px),
+    #000 calc(100% - 9px)
+  );
+}
+
+.ring-core {
+  width: 138px;
+  height: 138px;
+  border-radius: 50%;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  box-shadow: 0 4px 16px rgba(52, 52, 52, .08);
+}
+
+.ring-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 12px 2px var(--primary);
+  margin-bottom: 8px;
+}
+
+.ring-time {
+  font-family: var(--mono);
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.ring-label {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+  text-align: center;
+  padding: 0 10px;
+  max-width: 120px;
+}
+
+.panel,
+.name-gate {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 14px;
+  box-shadow: 0 3px 12px rgba(52, 52, 52, .05);
+}
+
+.panel h2 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--secondary);
+  margin: 0 0 14px;
+  font-weight: 700;
+}
+
+label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+input[type="text"],
+textarea {
+  width: 100%;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  margin-bottom: 14px;
+  resize: vertical;
+}
+
+textarea {
+  min-height: 64px;
+}
+
+input:focus,
+textarea:focus,
+button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.duration-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.dur-btn {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 12px 3px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dur-btn:hover,
+.dur-btn.selected {
+  border-color: var(--primary);
+  background: #E6F2EC;
+  color: var(--secondary);
+}
+
+button.primary {
+  width: 100%;
+  background: var(--primary);
+  color: #FFFFFF;
+  border: 0;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button.primary:hover {
+  background: var(--secondary);
+}
+
+button.primary:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+
+button.ghost {
+  width: 100%;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 13px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+button.ghost:hover {
+  color: var(--secondary);
+  border-color: var(--primary);
+}
+
+.req-card {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--primary);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+.req-card .who {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.req-card .meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin: 2px 0 8px;
+}
+
+.req-card .reason {
+  font-size: 13px;
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+.req-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.req-actions button {
+  flex: 1;
+  border: 0;
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-accept {
+  background: var(--primary);
+  color: #FFFFFF;
+}
+
+.btn-decline {
+  background: #E6F2EC;
+  color: var(--secondary);
+  border: 1px solid var(--primary) !important;
+}
+
+.name-gate {
+  text-align: center;
+}
+
+.name-gate p {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0 0 16px;
+}
+
+.empty-note,
+.footer-note,
+.status-note {
+  color: var(--muted);
+  text-align: center;
+}
+
+.empty-note {
+  font-size: 13px;
+  padding: 6px 0 2px;
+}
+
+.footer-note {
+  font-family: var(--mono);
+  font-size: 11px;
+  margin-top: 18px;
+}
+
+.status-note {
+  font-size: 11px;
+  margin-top: 6px;
+  min-height: 14px;
+}
+
+/* Kleines Statusfenster unten rechts */
+.mini-status {
+  position: fixed;
+  right: 14px;
+  bottom: 14px;
+  width: 190px;
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--primary);
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: 0 6px 22px rgba(52, 52, 52, .15);
+  z-index: 10;
+  font-size: 12px;
+}
+
+.mini-status strong {
+  display: block;
+  color: var(--secondary);
+  margin-bottom: 3px;
+}
+
+.mini-time {
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.mini-toggle {
+  position: fixed;
+  right: 14px;
+  bottom: 14px;
+  background: var(--primary);
+  color: #FFFFFF;
+  border: 0;
+  border-radius: 20px;
+  padding: 9px 12px;
+  font-weight: 700;
+  z-index: 9;
+  cursor: pointer;
+}
+
+.hidden {
+  display: none;
+}
+
+@media (max-width: 420px) {
+  .duration-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; min-height: 100vh; background: linear-gradient(180deg, #eaf3f8 0, var(--bg) 260px);
-    color: var(--text); font-family: var(--sans); display: flex; justify-content: center; padding: 32px 16px 64px;
-  }
-  .app { width: 100%; max-width: 480px; }
-  .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--blue); text-align: center; margin-bottom: 6px; }
-  h1 { text-align: center; font-size: 20px; font-weight: 700; margin: 0 0 28px; color: var(--text); }
-  .ring-wrap { display: flex; justify-content: center; margin-bottom: 22px; position: relative; }
-  .ring { width: 176px; height: 176px; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; }
-  .ring::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(var(--ring-color, var(--blue)) calc(var(--pct, 100) * 1%), #d9e1e7 0); -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px)); mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px)); }
-  .ring-core { width: 138px; height: 138px; border-radius: 50%; background: var(--panel); border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1; box-shadow: 0 4px 16px rgba(32,42,53,.08); }
-  .ring-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--blue); box-shadow: 0 0 12px 2px var(--blue); margin-bottom: 8px; }
-  .ring-dot.pulse { animation: pulse 1.4s ease-in-out infinite; }
-  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
-  .ring-time { font-family: var(--mono); font-size: 26px; font-weight: 700; letter-spacing: .02em; }
-  .ring-label { font-size: 11px; color: var(--muted); margin-top: 4px; text-align: center; padding: 0 10px; max-width: 120px; }
-  .req-badge { position: absolute; top: 4px; right: calc(50% - 88px - 6px); background: var(--red); color: #fff; font-family: var(--mono); font-size: 11px; font-weight: 700; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 3px var(--bg); animation: pulse 1s ease-in-out infinite; }
-  .panel, .name-gate { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 14px; box-shadow: 0 3px 12px rgba(32,42,53,.05); }
-  .panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--blue); margin: 0 0 14px; font-weight: 700; }
-  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
-  input[type=text], textarea { width: 100%; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-family: var(--sans); font-size: 14px; margin-bottom: 14px; resize: vertical; }
-  textarea { min-height: 64px; }
-  input[type=text]:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
-  .duration-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 4px; }
-  .dur-btn { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 12px 4px; font-family: var(--mono); font-size: 13px; font-weight: 700; cursor: pointer; transition: .15s ease; }
-  .dur-btn:hover { border-color: var(--blue); background: var(--blue-dim); color: var(--blue-dark); }
-  .dur-btn:disabled { opacity: .4; cursor: not-allowed; }
-  .dur-btn.selected { border-color: var(--amber); background: #fff4d9; color: #805800; }
-  button.primary { width: 100%; background: var(--blue); color: #fff; border: none; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer; transition: filter .15s ease; }
-  button.primary:hover { background: var(--blue-dark); }
-  button.primary:disabled { opacity: .4; cursor: not-allowed; }
-  button.ghost { width: 100%; background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 13px; cursor: pointer; margin-top: 8px; }
-  button.ghost:hover { color: var(--text); border-color: var(--blue); }
-  .req-card { background: var(--panel-2); border: 1px solid var(--border); border-left: 3px solid var(--red); border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
-  .req-card .who { font-weight: 700; font-size: 14px; margin-bottom: 2px; }
-  .req-card .meta { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-bottom: 8px; }
-  .req-card .reason { font-size: 13px; color: var(--text); margin-bottom: 10px; line-height: 1.4; }
-  .req-actions { display: flex; gap: 8px; }
-  .req-actions button { flex: 1; border-radius: 6px; padding: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; }
-  .btn-accept { background: var(--blue); color: #fff; }
-  .btn-decline { background: var(--red-dim); color: #8d1d1d; border: 1px solid var(--red) !important; }
-  .name-gate { text-align: center; }
-  .name-gate p { color: var(--muted); font-size: 13px; margin: 0 0 16px; }
-  .empty-note, .footer-note, .status-note { color: var(--muted); text-align: center; }
-  .empty-note { font-size: 13px; padding: 6px 0 2px; }
-  .footer-note { font-size: 11px; margin-top: 18px; font-family: var(--mono); }
-  .status-note { font-size: 11px; margin-top: 6px; min-height: 14px; }
+}
 </style>
 </head>
+
 <body>
 <div class="app">
-  <div class="eyebrow">Schaeffler · Fernwartung</div>
+  <div class="eyebrow">Segment 05 ALDS PC</div>
   <h1>Wer ist gerade auf dem PC?</h1>
+
   <div id="root"></div>
-  <div class="footer-note">Aktualisiert automatisch im Hintergrund</div>
+
+  <div class="footer-note">
+    Aktualisiert automatisch im Hintergrund
+  </div>
+
   <div class="status-note" id="statusNote"></div>
 </div>
+
+<div id="miniStatus" class="mini-status hidden">
+  <button
+    id="miniClose"
+    style="position:absolute;right:6px;top:4px;border:0;background:transparent;cursor:pointer"
+  >
+    ×
+  </button>
+
+  <strong>Segment 05 ALDS PC</strong>
+  <div id="miniContent"></div>
+</div>
+
+<button id="miniToggle" class="mini-toggle">
+  Status anzeigen
+</button>
+
 <script>
-const BOARD_KEY = 'board-state';
-const NAME_KEY = 'my-name';
+const NAME_KEY = "my-name";
 const DURATIONS = [1, 2, 5, 10, 20, 30];
-let myName = '', session = null, requests = [], pendingReqMinutes = null, pendingReqReason = '', lastKnownSessionId = undefined, tickHandle = null, pollHandle = null;
-const root = document.getElementById('root');
-const statusNote = document.getElementById('statusNote');
-function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
-function fmt(ms) { if (ms < 0) ms = 0; const totalSec = Math.floor(ms / 1000); return Math.floor(totalSec / 60).toString().padStart(2, '0') + ':' + (totalSec % 60).toString().padStart(2, '0'); }
-function sameName(a,b) { return (a||'').trim().toLowerCase() === (b||'').trim().toLowerCase(); }
-function escapeHtml(str) { const div = document.createElement('div'); div.textContent = str || ''; return div.innerHTML; }
-function isEditingText() { const active = document.activeElement; return !!(active && root.contains(active) && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')); }
-async function loadName() { try { myName = localStorage.getItem(NAME_KEY) || ''; } catch(e) { myName = ''; } }
-async function saveName(name) { myName = name; try { localStorage.setItem(NAME_KEY, name); } catch(e) {} }
-async function loadBoardState() { try { const r = await fetch('/api/board'); if (r.ok) { const parsed = await r.json(); session = parsed.session || null; requests = parsed.requests || []; } } catch(e) {} }
-async function saveBoardState(newSession, newRequests) { session = newSession; requests = newRequests; try { const r = await fetch('/api/board', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({session,requests}) }); if(!r.ok) throw new Error('save failed'); } catch(e) { flashStatus('Speichern fehlgeschlagen, versuche es erneut …'); } }
-function flashStatus(msg) { statusNote.textContent = msg; setTimeout(() => { if(statusNote.textContent === msg) statusNote.textContent = ''; }, 3000); }
-async function bookSlot(minutes) { const now = Date.now(); await saveBoardState({id:uid(),user:myName,duration:minutes,startTime:now,endTime:now+minutes*60000},[]); render(); }
-async function endSessionEarly() { await saveBoardState(null,[]); render(); }
-async function sendInterruptRequest(reason,minutes) { if(!session) return; const req={id:uid(),sessionId:session.id,fromUser:myName,reason:(reason||'').trim(),minutes,status:'pending',timestamp:Date.now()}; const list=requests.filter(r=>r.sessionId===session.id); list.push(req); await saveBoardState(session,list); pendingReqMinutes=null; pendingReqReason=''; render(); }
-async function acceptRequest(reqId) { const req=requests.find(r=>r.id===reqId); if(!req)return; const now=Date.now(); await saveBoardState({id:uid(),user:req.fromUser,duration:req.minutes,startTime:now,endTime:now+req.minutes*60000},[]); render(); }
-async function declineRequest(reqId) { await saveBoardState(session,requests.filter(r=>r.id!==reqId)); render(); }
-async function refresh() { if(isEditingText())return; await loadBoardState(); if(session&&session.endTime<=Date.now()) await saveBoardState(null,[]); if(session&&session.id!==lastKnownSessionId){pendingReqMinutes=null;pendingReqReason='';} lastKnownSessionId=session?session.id:null; render(); }
-function render() {
-  if(isEditingText())return;
-  if(!myName){ root.innerHTML='<div class="name-gate"><p>Bitte gib deinen Namen ein, bevor du Slots buchen oder Anfragen stellen kannst.</p><input type="text" id="nameInput" placeholder="Dein Name" autofocus /><button class="primary" id="nameSubmit">Weiter</button></div>'; document.getElementById('nameSubmit').onclick=async()=>{const val=document.getElementById('nameInput').value.trim();if(!val)return;await saveName(val);render();}; document.getElementById('nameInput').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('nameSubmit').click();}); return; }
-  const isFree=!session, isMine=session&&sameName(session.user,myName), relevantRequests=requests.filter(r=>session&&r.sessionId===session.id&&r.status==='pending'), hasPendingForMe=isMine&&relevantRequests.length>0;
-  let pct=100,ringColor='var(--blue)',dotColor='var(--blue)',pulse=false,timeLabel='',subLabel='PC frei';
-  if(session){const total=session.endTime-session.startTime,remaining=session.endTime-Date.now();pct=Math.max(0,Math.min(100,(remaining/total)*100));ringColor='var(--amber)';dotColor=hasPendingForMe?'var(--red)':'var(--amber)';pulse=hasPendingForMe;timeLabel=fmt(remaining);subLabel='Belegt von '+session.user;}
-  let html='<div class="ring-wrap"><div class="ring" style="--pct:'+pct+';--ring-color:'+ringColor+';"><div class="ring-core"><div class="ring-dot '+(pulse?'pulse':'')+'" style="background:'+dotColor+';box-shadow:0 0 12px 2px '+dotColor+';"></div>'+(session?'<div class="ring-time">'+timeLabel+'</div>':'<div class="ring-time" style="font-size:16px;">FREI</div>')+'<div class="ring-label">'+escapeHtml(subLabel)+'</div></div></div>'+(hasPendingForMe?'<div class="req-badge">'+relevantRequests.length+'</div>':'')+'</div>';
-  if(isFree){html+='<div class="panel"><h2>Slot buchen</h2><label>Dauer wählen</label><div class="duration-grid">'+DURATIONS.map(d=>'<button class="dur-btn" data-min="'+d+'">'+d+' Min</button>').join('')+'</div></div>';}
-  else if(isMine){html+='<div class="panel"><h2>Deine Sitzung</h2><div class="empty-note" style="text-align:left;padding:0 0 12px;">Dauer: '+session.duration+' Min · verbleibend <span style="font-family:var(--mono);">'+timeLabel+'</span></div><button class="ghost" id="endEarly">Sitzung jetzt beenden</button></div><div class="panel"><h2>Offene Unterbrechungsanfragen</h2>'+(relevantRequests.length===0?'<div class="empty-note">Keine offenen Anfragen</div>':relevantRequests.map(r=>'<div class="req-card"><div class="who">'+escapeHtml(r.fromUser)+'</div><div class="meta">möchte '+r.minutes+' Min übernehmen</div><div class="reason">'+(escapeHtml(r.reason)||'(keine Begründung angegeben)')+'</div><div class="req-actions"><button class="btn-accept" data-accept="'+r.id+'">Annehmen</button><button class="btn-decline" data-decline="'+r.id+'">Ablehnen</button></div></div>').join(''))+'</div>';}
-  else {const myOwnPending=requests.find(r=>session&&r.sessionId===session.id&&sameName(r.fromUser,myName)&&r.status==='pending');html+='<div class="panel"><h2>Unterbrechung anfragen</h2><label>Begründung</label><textarea id="reason" placeholder="Warum brauchst du den PC gerade?">'+escapeHtml(pendingReqReason)+'</textarea><label>Wie lange brauchst du ihn?</label><div class="duration-grid" id="reqDurations">'+DURATIONS.map(d=>'<button type="button" class="dur-btn '+(pendingReqMinutes===d?'selected':'')+'" data-min="'+d+'">'+d+' Min</button>').join('')+'</div><button class="primary" id="sendReq" style="margin-top:14px;" '+(pendingReqMinutes?'':'disabled')+'>Anfrage senden</button></div>'+(myOwnPending?'<div class="empty-note">Deine Anfrage ('+myOwnPending.minutes+' Min) wurde gesendet und wartet auf '+escapeHtml(session.user)+'.</div>':'');}
-  root.innerHTML=html; attachHandlers();
+
+let myName = "";
+let session = null;
+let requests = [];
+let pendingReqMinutes = null;
+let pendingReqReason = "";
+
+const root = document.getElementById("root");
+const statusNote = document.getElementById("statusNote");
+const miniStatus = document.getElementById("miniStatus");
+const miniToggle = document.getElementById("miniToggle");
+const miniContent = document.getElementById("miniContent");
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
-function attachHandlers(){root.querySelectorAll('.dur-btn[data-min]').forEach(btn=>{if(btn.closest('#reqDurations'))return;btn.onclick=()=>bookSlot(parseInt(btn.dataset.min,10));});const endBtn=document.getElementById('endEarly');if(endBtn)endBtn.onclick=endSessionEarly;root.querySelectorAll('[data-accept]').forEach(btn=>btn.onclick=()=>acceptRequest(btn.dataset.accept));root.querySelectorAll('[data-decline]').forEach(btn=>btn.onclick=()=>declineRequest(btn.dataset.decline));const wrap=document.getElementById('reqDurations');if(wrap){wrap.querySelectorAll('.dur-btn').forEach(btn=>btn.onclick=()=>{pendingReqMinutes=parseInt(btn.dataset.min,10);render();});const reason=document.getElementById('reason');if(reason)reason.oninput=()=>pendingReqReason=reason.value;const send=document.getElementById('sendReq');if(send)send.onclick=()=>{if(pendingReqMinutes)sendInterruptRequest(pendingReqReason,pendingReqMinutes);};}}
-function startTicking(){if(tickHandle)clearInterval(tickHandle);tickHandle=setInterval(()=>{if(session)render();},1000);}
-function startPolling(){if(pollHandle)clearInterval(pollHandle);pollHandle=setInterval(refresh,4000);}
-async function init(){await loadName();await loadBoardState();lastKnownSessionId=session?session.id:null;render();startTicking();startPolling();}
-init();
+
+function fmt(ms) {
+  ms = Math.max(0, ms);
+
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  return String(minutes).padStart(2, "0") + ":" +
+         String(seconds).padStart(2, "0");
+}
+
+function sameName(a, b) {
+  return (a || "").trim().toLowerCase() ===
+         (b || "").trim().toLowerCase();
+}
+
+function escapeHtml(value) {
+  const div = document.createElement("div");
+  div.textContent = value || "";
+  return div.innerHTML;
+}
+
+function isEditing() {
+  const active = document.activeElement;
+
+  return active &&
+    root.contains(active) &&
+    (active.tagName === "INPUT" || active.tagName === "TEXTAREA");
+}
+
+async function loadBoard() {
+  try {
+    const response = await fetch("/api/board");
+
+    if (response.ok) {
+      const data = await response.json();
+      session = data.session || null;
+      requests = data.requests || [];
+    }
+  } catch (error) {
+    statusNote.textContent = "Server momentan nicht erreichbar.";
+  }
+}
+
+async function saveBoard(newSession, newRequests) {
+  session = newSession;
+  requests = newRequests;
+
+  try {
+    const response = await fetch("/api/board", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        session,
+        requests
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error("Speichern fehlgeschlagen");
+    }
+  } catch (error) {
+    statusNote.textContent = "Speichern fehlgeschlagen.";
+  }
+}
+
+function updateMiniStatus() {
+  if (!session) {
+    miniContent.innerHTML =
+      '<b style="color:var(--primary)">PC frei</b>';
+    return;
+  }
+
+  miniContent.innerHTML =
+    "Belegt von <b>" +
+    escapeHtml(session.user) +
+    "</b><br>" +
+    '<span class="mini-time">' +
+    fmt(session.endTime - Date.now()) +
+    "</span> verbleibend";
+}
+
+async function bookSlot(minutes) {
+  const now = Date.now();
+
+  await saveBoard(
+    {
+      id: uid(),
+      user: myName,
+      duration: minutes,
+      startTime: now,
+      endTime: now + minutes * 60000
+    },
+    []
+  );
+
+  render();
+}
+
+async function endSession() {
+  await saveBoard(null, []);
+  render();
+}
+
+async function sendRequest(minutes) {
+  if (!session) return;
+
+  const reasonElement = document.getElementById("reason");
+
+  const request = {
+    id: uid(),
+    sessionId: session.id,
+    fromUser: myName,
+    reason: reasonElement ? reasonElement.value.trim() : "",
+    minutes,
+    status: "pending",
+    timestamp: Date.now()
+  };
+
+  const currentRequests = requests.filter(
+    requestItem => requestItem.sessionId === session.id
+  );
+
+  currentRequests.push(request);
+
+  await saveBoard(session, currentRequests);
+
+  pendingReqMinutes = null;
+  pendingReqReason = "";
+
+  render();
+}
+
+async function acceptRequest(requestId) {
+  const request = requests.find(item => item.id === requestId);
+
+  if (!request) return;
+
+  const now = Date.now();
+
+  await saveBoard(
+    {
+      id: uid(),
+      user: request.fromUser,
+      duration: request.minutes,
+      startTime: now,
+      endTime: now + request.minutes * 60000
+    },
+    []
+  );
+
+  render();
+}
+
+async function declineRequest(requestId) {
+  await saveBoard(
+    session,
+    requests.filter(item => item.id !== requestId)
+  );
+
+  render();
+}
+
+function render() {
+  if (isEditing()) return;
+
+  if (!myName) {
+    root.innerHTML = `
+      <div class="name-gate">
+        <p>Bitte gib deinen Namen ein.</p>
+        <input id="nameInput" type="text" placeholder="Dein Name">
+        <button class="primary" id="nameSubmit">Weiter</button>
+      </div>
+    `;
+
+    const nameInput = document.getElementById("nameInput");
+    const nameSubmit = document.getElementById("nameSubmit");
+
+    nameSubmit.onclick = () => {
+      const value = nameInput.value.trim();
+
+      if (!value) return;
+
+      myName = value;
+      localStorage.setItem(NAME_KEY, myName);
+      render();
+    };
+
+    nameInput.onkeydown = event => {
+      if (event.key === "Enter") {
+        nameSubmit.click();
+      }
+    };
+
+    updateMiniStatus();
+    return;
+  }
+
+  const isFree = !session;
+  const isMine = session && sameName(session.user, myName);
+
+  const relevantRequests = requests.filter(request =>
+    session &&
+    request.sessionId === session.id &&
+    request.status === "pending"
+  );
+
+  let remaining = "";
+  let percentage = 100;
+  let label = "PC frei";
+
+  if (session) {
+    const total = session.endTime - session.startTime;
+    const remainingMs = session.endTime - Date.now();
+
+    remaining = fmt(remainingMs);
+    percentage = Math.max(
+      0,
+      Math.min(100, (remainingMs / total) * 100)
+    );
+
+    label = "Belegt von " + session.user;
+  }
+
+  let html = `
+    <div class="ring-wrap">
+      <div
+        class="ring"
+        style="
+          --pct:${percentage};
+          --ring-color:${session ? "var(--secondary)" : "var(--primary)"};
+        "
+      >
+        <div class="ring-core">
+          <div class="ring-dot"></div>
+          <div class="ring-time">
+            ${session ? remaining : "FREI"}
+          </div>
+          <div class="ring-label">
+            ${escapeHtml(label)}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  if (isFree) {
+    html += `
+      <div class="panel">
+        <h2>Slot buchen</h2>
+        <label>Dauer wählen</label>
+
+        <div class="duration-grid">
+          ${DURATIONS.map(duration => `
+            <button
+              class="dur-btn"
+              data-book="${duration}"
+            >
+              ${duration} Min
+            </button>
+          `).join("")}
+        </div>
+      </div>
+    `;
+  } else if (isMine) {
+    html += `
+      <div class="panel">
+        <h2>Deine Sitzung</h2>
+
+        <div class="empty-note">
+          Dauer: ${session.duration} Min · verbleibend ${remaining}
+        </div>
+
+        <button class="ghost" id="endSession">
+          Sitzung jetzt beenden
+        </button>
+      </div>
+
+      <div class="panel">
+        <h2>Offene Unterbrechungsanfragen</h2>
+
+        ${
+          relevantRequests.length === 0
+            ? '<div class="empty-note">Keine offenen Anfragen</div>'
+            : relevantRequests.map(request => `
+              <div class="req-card">
+                <div class="who">
+                  ${escapeHtml(request.fromUser)}
+                </div>
+
+                <div class="meta">
+                  möchte ${request.minutes} Min übernehmen
+                </div>
+
+                <div class="reason">
+                  ${
+                    escapeHtml(request.reason) ||
+                    "(keine Begründung)"
+                  }
+                </div>
+
+                <div class="req-actions">
+                  <button
+                    class="btn-accept"
+                    data-accept="${request.id}"
+                  >
+                    Annehmen
+                  </button>
+
+                  <button
+                    class="btn-decline"
+                    data-decline="${request.id}"
+                  >
+                    Ablehnen
+                  </button>
+                </div>
+              </div>
+            `).join("")
+        }
+      </div>
+    `;
+  } else {
+    html += `
+      <div class="panel">
+        <h2>Unterbrechung anfragen</h2>
+
+        <label>Begründung</label>
+        <textarea
+          id="reason"
+          placeholder="Warum brauchst du den PC gerade?"
+        >${escapeHtml(pendingReqReason)}</textarea>
+
+        <label>Wie lange brauchst du ihn?</label>
+
+        <div class="duration-grid">
+          ${DURATIONS.map(duration => `
+            <button
+              class="dur-btn ${
+                pendingReqMinutes === duration ? "selected" : ""
+              }"
+              data-request="${duration}"
+            >
+              ${duration} Min
+            </button>
+          `).join("")}
+        </div>
+
+        <button
+          class="primary"
+          id="sendRequest"
+          ${pendingReqMinutes ? "" : "disabled"}
+        >
+          Anfrage senden
+        </button>
+      </div>
+    `;
+  }
+
+  root.innerHTML = html;
+
+  root.querySelectorAll("[data-book]").forEach(button => {
+    button.onclick = () => {
+      bookSlot(Number(button.dataset.book));
+    };
+  });
+
+  root.querySelectorAll("[data-request]").forEach(button => {
+    button.onclick = () => {
+      pendingReqMinutes = Number(button.dataset.request);
+      render();
+    };
+  });
+
+  const reasonElement = document.getElementById("reason");
+
+  if (reasonElement) {
+    reasonElement.oninput = () => {
+      pendingReqReason = reasonElement.value;
+    };
+  }
+
+  const sendRequestButton = document.getElementById("sendRequest");
+
+  if (sendRequestButton) {
+    sendRequestButton.onclick = () => {
+      if (pendingReqMinutes) {
+        sendRequest(pendingReqMinutes);
+      }
+    };
+  }
+
+  const endSessionButton = document.getElementById("endSession");
+
+  if (endSessionButton) {
+    endSessionButton.onclick = endSession;
+  }
+
+  root.querySelectorAll("[data-accept]").forEach(button => {
+    button.onclick = () => {
+      acceptRequest(button.dataset.accept);
+    };
+  });
+
+  root.querySelectorAll("[data-decline]").forEach(button => {
+    button.onclick = () => {
+      declineRequest(button.dataset.decline);
+    };
+  });
+
+  updateMiniStatus();
+}
+
+document.getElementById("miniToggle").onclick = () => {
+  miniStatus.classList.remove("hidden");
+  miniToggle.classList.add("hidden");
+};
+
+document.getElementById("miniClose").onclick = () => {
+  miniStatus.classList.add("hidden");
+  miniToggle.classList.remove("hidden");
+};
+
+setInterval(async () => {
+  if (session && session.endTime <= Date.now()) {
+    await endSession();
+  } else {
+    if (session && !isEditing()) {
+      render();
+    }
+
+    updateMiniStatus();
+  }
+}, 1000);
+
+setInterval(async () => {
+  if (!isEditing()) {
+    await loadBoard();
+    render();
+  }
+}, 4000);
+
+(async function init() {
+  myName = localStorage.getItem(NAME_KEY) || "";
+  await loadBoard();
+  render();
+})();
 </script>
 </body>
 </html>
