@@ -3,439 +3,122 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fernwartung – Slot-Buchung</title>
+<title>PC-Fernwartung – Slot-Buchung</title>
 <style>
   :root {
-    --bg: #12161b;
-    --panel: #1a2028;
-    --panel-2: #1f2630;
-    --border: #262e38;
-    --text: #e7ebee;
-    --muted: #8993a1;
-    --green: #35d07f;
-    --green-dim: #1e5c3d;
-    --amber: #f5a93f;
-    --amber-dim: #6b4c1a;
-    --red: #ef5b52;
-    --red-dim: #5c2420;
-    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    --bg: #f2f4f7;
+    --panel: #ffffff;
+    --panel-2: #f7f8fa;
+    --border: #d9dee5;
+    --text: #202a35;
+    --muted: #66717d;
+    --blue: #0076b9;
+    --blue-dark: #005b8f;
+    --blue-dim: #e3f2fa;
+    --amber: #f5a800;
+    --amber-dark: #c78300;
+    --red: #c62828;
+    --red-dim: #fdeaea;
     --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0;
-    min-height: 100vh;
-    background: radial-gradient(circle at 50% -10%, #1c2430 0%, var(--bg) 55%);
-    color: var(--text);
-    font-family: var(--sans);
-    display: flex;
-    justify-content: center;
-    padding: 32px 16px 64px;
+    margin: 0; min-height: 100vh; background: linear-gradient(180deg, #eaf3f8 0, var(--bg) 260px);
+    color: var(--text); font-family: var(--sans); display: flex; justify-content: center; padding: 32px 16px 64px;
   }
   .app { width: 100%; max-width: 480px; }
-  .eyebrow {
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--muted);
-    text-align: center;
-    margin-bottom: 6px;
-  }
-  h1 {
-    text-align: center;
-    font-size: 20px;
-    font-weight: 600;
-    margin: 0 0 28px;
-    letter-spacing: -0.01em;
-  }
+  .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--blue); text-align: center; margin-bottom: 6px; }
+  h1 { text-align: center; font-size: 20px; font-weight: 700; margin: 0 0 28px; color: var(--text); }
   .ring-wrap { display: flex; justify-content: center; margin-bottom: 22px; position: relative; }
-  .ring {
-    width: 176px; height: 176px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    position: relative; transition: background 0.6s ease;
-  }
-  .ring::before {
-    content: "";
-    position: absolute; inset: 0; border-radius: 50%;
-    background: conic-gradient(var(--ring-color, var(--green)) calc(var(--pct, 100) * 1%), #2a323d 0);
-    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px));
-    mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px));
-  }
-  .ring-core {
-    width: 138px; height: 138px; border-radius: 50%;
-    background: var(--panel); border: 1px solid var(--border);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    z-index: 1;
-  }
-  .ring-dot {
-    width: 10px; height: 10px; border-radius: 50%;
-    background: var(--green); box-shadow: 0 0 12px 2px var(--green);
-    margin-bottom: 8px; transition: background 0.4s ease, box-shadow 0.4s ease;
-  }
+  .ring { width: 176px; height: 176px; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; }
+  .ring::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(var(--ring-color, var(--blue)) calc(var(--pct, 100) * 1%), #d9e1e7 0); -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px)); mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px)); }
+  .ring-core { width: 138px; height: 138px; border-radius: 50%; background: var(--panel); border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1; box-shadow: 0 4px 16px rgba(32,42,53,.08); }
+  .ring-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--blue); box-shadow: 0 0 12px 2px var(--blue); margin-bottom: 8px; }
   .ring-dot.pulse { animation: pulse 1.4s ease-in-out infinite; }
-  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
-  .ring-time { font-family: var(--mono); font-size: 26px; font-weight: 600; letter-spacing: 0.02em; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+  .ring-time { font-family: var(--mono); font-size: 26px; font-weight: 700; letter-spacing: .02em; }
   .ring-label { font-size: 11px; color: var(--muted); margin-top: 4px; text-align: center; padding: 0 10px; max-width: 120px; }
-  .req-badge {
-    position: absolute; top: 4px; right: calc(50% - 88px - 6px);
-    background: var(--red); color: #1a0d0c;
-    font-family: var(--mono); font-size: 11px; font-weight: 700;
-    width: 22px; height: 22px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 0 0 3px var(--bg);
-    animation: pulse 1s ease-in-out infinite;
-  }
-  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 14px; }
-  .panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 14px; font-weight: 600; }
+  .req-badge { position: absolute; top: 4px; right: calc(50% - 88px - 6px); background: var(--red); color: #fff; font-family: var(--mono); font-size: 11px; font-weight: 700; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 3px var(--bg); animation: pulse 1s ease-in-out infinite; }
+  .panel, .name-gate { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 14px; box-shadow: 0 3px 12px rgba(32,42,53,.05); }
+  .panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--blue); margin: 0 0 14px; font-weight: 700; }
   label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
-  input[type=text], textarea {
-    width: 100%; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px;
-    padding: 10px 12px; color: var(--text); font-family: var(--sans); font-size: 14px;
-    margin-bottom: 14px; resize: vertical;
-  }
+  input[type=text], textarea { width: 100%; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-family: var(--sans); font-size: 14px; margin-bottom: 14px; resize: vertical; }
   textarea { min-height: 64px; }
   input[type=text]:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
-  .duration-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 4px; }
-  .dur-btn {
-    background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
-    border-radius: 8px; padding: 12px 4px; font-family: var(--mono); font-size: 14px; font-weight: 600;
-    cursor: pointer; transition: border-color 0.15s ease, background 0.15s ease;
-  }
-  .dur-btn:hover { border-color: var(--green); background: var(--green-dim); }
-  .dur-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .dur-btn.selected { border-color: var(--amber); background: var(--amber-dim); }
-  button.primary {
-    width: 100%; background: var(--amber); color: #241a06; border: none; border-radius: 8px;
-    padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer; transition: filter 0.15s ease;
-  }
-  button.primary:hover { filter: brightness(1.08); }
-  button.primary:disabled { opacity: 0.4; cursor: not-allowed; filter: none; }
-  button.ghost {
-    width: 100%; background: transparent; color: var(--muted); border: 1px solid var(--border);
-    border-radius: 8px; padding: 10px; font-size: 13px; cursor: pointer; margin-top: 8px;
-  }
-  button.ghost:hover { color: var(--text); border-color: var(--muted); }
-  .req-card {
-    background: var(--panel-2); border: 1px solid var(--border); border-left: 3px solid var(--red);
-    border-radius: 8px; padding: 12px 14px; margin-bottom: 10px;
-  }
+  .duration-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 4px; }
+  .dur-btn { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 12px 4px; font-family: var(--mono); font-size: 13px; font-weight: 700; cursor: pointer; transition: .15s ease; }
+  .dur-btn:hover { border-color: var(--blue); background: var(--blue-dim); color: var(--blue-dark); }
+  .dur-btn:disabled { opacity: .4; cursor: not-allowed; }
+  .dur-btn.selected { border-color: var(--amber); background: #fff4d9; color: #805800; }
+  button.primary { width: 100%; background: var(--blue); color: #fff; border: none; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer; transition: filter .15s ease; }
+  button.primary:hover { background: var(--blue-dark); }
+  button.primary:disabled { opacity: .4; cursor: not-allowed; }
+  button.ghost { width: 100%; background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 13px; cursor: pointer; margin-top: 8px; }
+  button.ghost:hover { color: var(--text); border-color: var(--blue); }
+  .req-card { background: var(--panel-2); border: 1px solid var(--border); border-left: 3px solid var(--red); border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
   .req-card .who { font-weight: 700; font-size: 14px; margin-bottom: 2px; }
   .req-card .meta { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-bottom: 8px; }
   .req-card .reason { font-size: 13px; color: var(--text); margin-bottom: 10px; line-height: 1.4; }
   .req-actions { display: flex; gap: 8px; }
   .req-actions button { flex: 1; border-radius: 6px; padding: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; }
-  .btn-accept { background: var(--green); color: #072414; }
-  .btn-decline { background: var(--red-dim); color: #ffd9d5; border: 1px solid var(--red) !important; }
-  .name-gate { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 24px 20px; text-align: center; }
+  .btn-accept { background: var(--blue); color: #fff; }
+  .btn-decline { background: var(--red-dim); color: #8d1d1d; border: 1px solid var(--red) !important; }
+  .name-gate { text-align: center; }
   .name-gate p { color: var(--muted); font-size: 13px; margin: 0 0 16px; }
-  .empty-note { font-size: 13px; color: var(--muted); text-align: center; padding: 6px 0 2px; }
-  .footer-note { text-align: center; font-size: 11px; color: var(--muted); margin-top: 18px; font-family: var(--mono); }
-  .status-note { text-align: center; font-size: 11px; color: var(--muted); margin-top: 6px; min-height: 14px; }
+  .empty-note, .footer-note, .status-note { color: var(--muted); text-align: center; }
+  .empty-note { font-size: 13px; padding: 6px 0 2px; }
+  .footer-note { font-size: 11px; margin-top: 18px; font-family: var(--mono); }
+  .status-note { font-size: 11px; margin-top: 6px; min-height: 14px; }
 </style>
 </head>
 <body>
 <div class="app">
-  <div class="eyebrow">Rework-Station · Fernzugriff</div>
+  <div class="eyebrow">Schaeffler · Fernwartung</div>
   <h1>Wer ist gerade auf dem PC?</h1>
   <div id="root"></div>
   <div class="footer-note">Aktualisiert automatisch im Hintergrund</div>
   <div class="status-note" id="statusNote"></div>
 </div>
-
 <script>
 const BOARD_KEY = 'board-state';
 const NAME_KEY = 'my-name';
-const DURATIONS = [5, 10, 20, 30];
-
-let myName = '';
-let session = null;
-let requests = [];
-let pendingReqMinutes = null;
-let pendingReqReason = '';
-let lastKnownSessionId = undefined;
-let tickHandle = null;
-let pollHandle = null;
-
+const DURATIONS = [1, 2, 5, 10, 20, 30];
+let myName = '', session = null, requests = [], pendingReqMinutes = null, pendingReqReason = '', lastKnownSessionId = undefined, tickHandle = null, pollHandle = null;
 const root = document.getElementById('root');
 const statusNote = document.getElementById('statusNote');
-
-function uid() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-}
-function fmt(ms) {
-  if (ms < 0) ms = 0;
-  const totalSec = Math.floor(ms / 1000);
-  const m = Math.floor(totalSec / 60).toString().padStart(2, '0');
-  const s = (totalSec % 60).toString().padStart(2, '0');
-  return m + ':' + s;
-}
-function sameName(a, b) {
-  return (a || '').trim().toLowerCase() === (b || '').trim().toLowerCase();
-}
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str || '';
-  return div.innerHTML;
-}
-function isEditingText() {
-  const active = document.activeElement;
-  return !!(active && root.contains(active) && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA'));
-}
-
-async function loadName() {
-  try {
-    myName = localStorage.getItem(NAME_KEY) || '';
-  } catch (e) { myName = ''; }
-}
-async function saveName(name) {
-  myName = name;
-  try { localStorage.setItem(NAME_KEY, name); } catch (e) {}
-}
-
-// Single combined key for session + requests: fewer calls, and on a
-// transient read failure we keep the last known state instead of
-// wiping the screen.
-async function loadBoardState() {
-  try {
-    const r = await fetch('/api/board');
-    if (r.ok) {
-      const parsed = await r.json();
-      session = parsed.session || null;
-      requests = parsed.requests || [];
-    }
-  } catch (e) {
-    // Server nicht erreichbar oder transienter Fehler: aktuellen
-    // Zustand im Speicher belassen statt die Oberfläche zu leeren.
-  }
-}
-async function saveBoardState(newSession, newRequests) {
-  session = newSession;
-  requests = newRequests;
-  try {
-    const r = await fetch('/api/board', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ session, requests })
-    });
-    if (!r.ok) throw new Error('save failed');
-  } catch (e) {
-    flashStatus('Speichern fehlgeschlagen, versuche es erneut …');
-  }
-}
-function flashStatus(msg) {
-  statusNote.textContent = msg;
-  setTimeout(() => { if (statusNote.textContent === msg) statusNote.textContent = ''; }, 3000);
-}
-
-async function bookSlot(minutes) {
-  const s = { id: uid(), user: myName, duration: minutes, startTime: Date.now(), endTime: Date.now() + minutes * 60000 };
-  await saveBoardState(s, []);
-  render();
-}
-async function endSessionEarly() {
-  await saveBoardState(null, []);
-  render();
-}
-async function sendInterruptRequest(reason, minutes) {
-  if (!session) return;
-  const req = { id: uid(), sessionId: session.id, fromUser: myName, reason: (reason || '').trim(), minutes, status: 'pending', timestamp: Date.now() };
-  const list = requests.filter(r => r.sessionId === session.id);
-  list.push(req);
-  await saveBoardState(session, list);
-  pendingReqMinutes = null;
-  pendingReqReason = '';
-  render();
-}
-async function acceptRequest(reqId) {
-  const req = requests.find(r => r.id === reqId);
-  if (!req) return;
-  const s = { id: uid(), user: req.fromUser, duration: req.minutes, startTime: Date.now(), endTime: Date.now() + req.minutes * 60000 };
-  await saveBoardState(s, []);
-  render();
-}
-async function declineRequest(reqId) {
-  const list = requests.filter(r => r.id !== reqId);
-  await saveBoardState(session, list);
-  render();
-}
-
-async function refresh() {
-  if (isEditingText()) return; // don't touch the DOM while someone is typing
-  await loadBoardState();
-  if (session && session.endTime <= Date.now()) {
-    await saveBoardState(null, []);
-  }
-  if (session && session.id !== lastKnownSessionId) {
-    pendingReqMinutes = null;
-    pendingReqReason = '';
-  }
-  lastKnownSessionId = session ? session.id : null;
-  render();
-}
-
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+function fmt(ms) { if (ms < 0) ms = 0; const totalSec = Math.floor(ms / 1000); return Math.floor(totalSec / 60).toString().padStart(2, '0') + ':' + (totalSec % 60).toString().padStart(2, '0'); }
+function sameName(a,b) { return (a||'').trim().toLowerCase() === (b||'').trim().toLowerCase(); }
+function escapeHtml(str) { const div = document.createElement('div'); div.textContent = str || ''; return div.innerHTML; }
+function isEditingText() { const active = document.activeElement; return !!(active && root.contains(active) && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')); }
+async function loadName() { try { myName = localStorage.getItem(NAME_KEY) || ''; } catch(e) { myName = ''; } }
+async function saveName(name) { myName = name; try { localStorage.setItem(NAME_KEY, name); } catch(e) {} }
+async function loadBoardState() { try { const r = await fetch('/api/board'); if (r.ok) { const parsed = await r.json(); session = parsed.session || null; requests = parsed.requests || []; } } catch(e) {} }
+async function saveBoardState(newSession, newRequests) { session = newSession; requests = newRequests; try { const r = await fetch('/api/board', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({session,requests}) }); if(!r.ok) throw new Error('save failed'); } catch(e) { flashStatus('Speichern fehlgeschlagen, versuche es erneut …'); } }
+function flashStatus(msg) { statusNote.textContent = msg; setTimeout(() => { if(statusNote.textContent === msg) statusNote.textContent = ''; }, 3000); }
+async function bookSlot(minutes) { const now = Date.now(); await saveBoardState({id:uid(),user:myName,duration:minutes,startTime:now,endTime:now+minutes*60000},[]); render(); }
+async function endSessionEarly() { await saveBoardState(null,[]); render(); }
+async function sendInterruptRequest(reason,minutes) { if(!session) return; const req={id:uid(),sessionId:session.id,fromUser:myName,reason:(reason||'').trim(),minutes,status:'pending',timestamp:Date.now()}; const list=requests.filter(r=>r.sessionId===session.id); list.push(req); await saveBoardState(session,list); pendingReqMinutes=null; pendingReqReason=''; render(); }
+async function acceptRequest(reqId) { const req=requests.find(r=>r.id===reqId); if(!req)return; const now=Date.now(); await saveBoardState({id:uid(),user:req.fromUser,duration:req.minutes,startTime:now,endTime:now+req.minutes*60000},[]); render(); }
+async function declineRequest(reqId) { await saveBoardState(session,requests.filter(r=>r.id!==reqId)); render(); }
+async function refresh() { if(isEditingText())return; await loadBoardState(); if(session&&session.endTime<=Date.now()) await saveBoardState(null,[]); if(session&&session.id!==lastKnownSessionId){pendingReqMinutes=null;pendingReqReason='';} lastKnownSessionId=session?session.id:null; render(); }
 function render() {
-  if (isEditingText()) return; // never blow away an in-progress input
-
-  if (!myName) {
-    root.innerHTML = `
-      <div class="name-gate">
-        <p>Bitte gib deinen Namen ein, bevor du Slots buchen oder Anfragen stellen kannst.</p>
-        <input type="text" id="nameInput" placeholder="Dein Name" autofocus />
-        <button class="primary" id="nameSubmit">Weiter</button>
-      </div>
-    `;
-    document.getElementById('nameSubmit').onclick = async () => {
-      const val = document.getElementById('nameInput').value.trim();
-      if (!val) return;
-      await saveName(val);
-      render();
-    };
-    document.getElementById('nameInput').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') document.getElementById('nameSubmit').click();
-    });
-    return;
-  }
-
-  const isFree = !session;
-  const isMine = session && sameName(session.user, myName);
-  const relevantRequests = requests.filter(r => session && r.sessionId === session.id && r.status === 'pending');
-  const hasPendingForMe = isMine && relevantRequests.length > 0;
-
-  let pct = 100, ringColor = 'var(--green)', dotColor = 'var(--green)', pulse = false, timeLabel = '', subLabel = 'PC frei';
-  if (session) {
-    const total = session.endTime - session.startTime;
-    const remaining = session.endTime - Date.now();
-    pct = Math.max(0, Math.min(100, (remaining / total) * 100));
-    ringColor = 'var(--amber)';
-    dotColor = hasPendingForMe ? 'var(--red)' : 'var(--amber)';
-    pulse = hasPendingForMe;
-    timeLabel = fmt(remaining);
-    subLabel = 'Belegt von ' + session.user;
-  }
-
-  let html = `
-    <div class="ring-wrap">
-      <div class="ring" style="--pct:${pct}; --ring-color:${ringColor};">
-        <div class="ring-core">
-          <div class="ring-dot ${pulse ? 'pulse' : ''}" style="background:${dotColor}; box-shadow:0 0 12px 2px ${dotColor};"></div>
-          ${session ? `<div class="ring-time">${timeLabel}</div>` : `<div class="ring-time" style="font-size:16px;">FREI</div>`}
-          <div class="ring-label">${escapeHtml(subLabel)}</div>
-        </div>
-      </div>
-      ${hasPendingForMe ? `<div class="req-badge">${relevantRequests.length}</div>` : ''}
-    </div>
-  `;
-
-  if (isFree) {
-    html += `
-      <div class="panel">
-        <h2>Slot buchen</h2>
-        <label>Dauer wählen</label>
-        <div class="duration-grid">
-          ${DURATIONS.map(d => `<button class="dur-btn" data-min="${d}">${d} Min</button>`).join('')}
-        </div>
-      </div>
-    `;
-  } else if (isMine) {
-    html += `
-      <div class="panel">
-        <h2>Deine Sitzung</h2>
-        <div class="empty-note" style="text-align:left; padding:0 0 12px;">
-          Dauer: ${session.duration} Min · verbleibend <span style="font-family:var(--mono);">${timeLabel}</span>
-        </div>
-        <button class="ghost" id="endEarly">Sitzung jetzt beenden</button>
-      </div>
-      <div class="panel">
-        <h2>Offene Unterbrechungsanfragen</h2>
-        ${relevantRequests.length === 0
-          ? '<div class="empty-note">Keine offenen Anfragen</div>'
-          : relevantRequests.map(r => `
-            <div class="req-card" data-id="${r.id}">
-              <div class="who">${escapeHtml(r.fromUser)}</div>
-              <div class="meta">möchte ${r.minutes} Min übernehmen</div>
-              <div class="reason">${escapeHtml(r.reason) || '(keine Begründung angegeben)'}</div>
-              <div class="req-actions">
-                <button class="btn-accept" data-accept="${r.id}">Annehmen</button>
-                <button class="btn-decline" data-decline="${r.id}">Ablehnen</button>
-              </div>
-            </div>
-          `).join('')
-        }
-      </div>
-    `;
-  } else {
-    const myOwnPending = requests.find(r => session && r.sessionId === session.id && sameName(r.fromUser, myName) && r.status === 'pending');
-    html += `
-      <div class="panel">
-        <h2>Unterbrechung anfragen</h2>
-        <label>Begründung</label>
-        <textarea id="reason" placeholder="Warum brauchst du den PC gerade?">${escapeHtml(pendingReqReason)}</textarea>
-        <label>Wie lange brauchst du ihn?</label>
-        <div class="duration-grid" id="reqDurations">
-          ${DURATIONS.map(d => `<button type="button" class="dur-btn ${pendingReqMinutes === d ? 'selected' : ''}" data-min="${d}">${d} Min</button>`).join('')}
-        </div>
-        <button class="primary" id="sendReq" style="margin-top:14px;" ${pendingReqMinutes ? '' : 'disabled'}>Anfrage senden</button>
-      </div>
-      ${myOwnPending ? `<div class="empty-note">Deine Anfrage (${myOwnPending.minutes} Min) wurde gesendet und wartet auf ${escapeHtml(session.user)}.</div>` : ''}
-    `;
-  }
-
-  root.innerHTML = html;
-  attachHandlers();
+  if(isEditingText())return;
+  if(!myName){ root.innerHTML='<div class="name-gate"><p>Bitte gib deinen Namen ein, bevor du Slots buchen oder Anfragen stellen kannst.</p><input type="text" id="nameInput" placeholder="Dein Name" autofocus /><button class="primary" id="nameSubmit">Weiter</button></div>'; document.getElementById('nameSubmit').onclick=async()=>{const val=document.getElementById('nameInput').value.trim();if(!val)return;await saveName(val);render();}; document.getElementById('nameInput').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('nameSubmit').click();}); return; }
+  const isFree=!session, isMine=session&&sameName(session.user,myName), relevantRequests=requests.filter(r=>session&&r.sessionId===session.id&&r.status==='pending'), hasPendingForMe=isMine&&relevantRequests.length>0;
+  let pct=100,ringColor='var(--blue)',dotColor='var(--blue)',pulse=false,timeLabel='',subLabel='PC frei';
+  if(session){const total=session.endTime-session.startTime,remaining=session.endTime-Date.now();pct=Math.max(0,Math.min(100,(remaining/total)*100));ringColor='var(--amber)';dotColor=hasPendingForMe?'var(--red)':'var(--amber)';pulse=hasPendingForMe;timeLabel=fmt(remaining);subLabel='Belegt von '+session.user;}
+  let html='<div class="ring-wrap"><div class="ring" style="--pct:'+pct+';--ring-color:'+ringColor+';"><div class="ring-core"><div class="ring-dot '+(pulse?'pulse':'')+'" style="background:'+dotColor+';box-shadow:0 0 12px 2px '+dotColor+';"></div>'+(session?'<div class="ring-time">'+timeLabel+'</div>':'<div class="ring-time" style="font-size:16px;">FREI</div>')+'<div class="ring-label">'+escapeHtml(subLabel)+'</div></div></div>'+(hasPendingForMe?'<div class="req-badge">'+relevantRequests.length+'</div>':'')+'</div>';
+  if(isFree){html+='<div class="panel"><h2>Slot buchen</h2><label>Dauer wählen</label><div class="duration-grid">'+DURATIONS.map(d=>'<button class="dur-btn" data-min="'+d+'">'+d+' Min</button>').join('')+'</div></div>';}
+  else if(isMine){html+='<div class="panel"><h2>Deine Sitzung</h2><div class="empty-note" style="text-align:left;padding:0 0 12px;">Dauer: '+session.duration+' Min · verbleibend <span style="font-family:var(--mono);">'+timeLabel+'</span></div><button class="ghost" id="endEarly">Sitzung jetzt beenden</button></div><div class="panel"><h2>Offene Unterbrechungsanfragen</h2>'+(relevantRequests.length===0?'<div class="empty-note">Keine offenen Anfragen</div>':relevantRequests.map(r=>'<div class="req-card"><div class="who">'+escapeHtml(r.fromUser)+'</div><div class="meta">möchte '+r.minutes+' Min übernehmen</div><div class="reason">'+(escapeHtml(r.reason)||'(keine Begründung angegeben)')+'</div><div class="req-actions"><button class="btn-accept" data-accept="'+r.id+'">Annehmen</button><button class="btn-decline" data-decline="'+r.id+'">Ablehnen</button></div></div>').join(''))+'</div>';}
+  else {const myOwnPending=requests.find(r=>session&&r.sessionId===session.id&&sameName(r.fromUser,myName)&&r.status==='pending');html+='<div class="panel"><h2>Unterbrechung anfragen</h2><label>Begründung</label><textarea id="reason" placeholder="Warum brauchst du den PC gerade?">'+escapeHtml(pendingReqReason)+'</textarea><label>Wie lange brauchst du ihn?</label><div class="duration-grid" id="reqDurations">'+DURATIONS.map(d=>'<button type="button" class="dur-btn '+(pendingReqMinutes===d?'selected':'')+'" data-min="'+d+'">'+d+' Min</button>').join('')+'</div><button class="primary" id="sendReq" style="margin-top:14px;" '+(pendingReqMinutes?'':'disabled')+'>Anfrage senden</button></div>'+(myOwnPending?'<div class="empty-note">Deine Anfrage ('+myOwnPending.minutes+' Min) wurde gesendet und wartet auf '+escapeHtml(session.user)+'.</div>':'');}
+  root.innerHTML=html; attachHandlers();
 }
-
-function attachHandlers() {
-  root.querySelectorAll('.dur-btn[data-min]').forEach(btn => {
-    if (btn.closest('#reqDurations')) return;
-    btn.onclick = () => bookSlot(parseInt(btn.dataset.min, 10));
-  });
-
-  const endBtn = document.getElementById('endEarly');
-  if (endBtn) endBtn.onclick = () => endSessionEarly();
-
-  root.querySelectorAll('[data-accept]').forEach(btn => { btn.onclick = () => acceptRequest(btn.dataset.accept); });
-  root.querySelectorAll('[data-decline]').forEach(btn => { btn.onclick = () => declineRequest(btn.dataset.decline); });
-
-  const reqDurWrap = document.getElementById('reqDurations');
-  if (reqDurWrap) {
-    reqDurWrap.querySelectorAll('.dur-btn').forEach(btn => {
-      btn.onclick = () => {
-        pendingReqMinutes = parseInt(btn.dataset.min, 10);
-        render();
-      };
-    });
-    const reasonEl = document.getElementById('reason');
-    if (reasonEl) {
-      reasonEl.oninput = () => { pendingReqReason = reasonEl.value; };
-    }
-    const sendBtn = document.getElementById('sendReq');
-    if (sendBtn) {
-      sendBtn.onclick = () => {
-        if (!pendingReqMinutes) return;
-        sendInterruptRequest(pendingReqReason, pendingReqMinutes);
-      };
-    }
-  }
-}
-
-function startTicking() {
-  if (tickHandle) clearInterval(tickHandle);
-  tickHandle = setInterval(() => { if (session) render(); }, 1000);
-}
-function startPolling() {
-  if (pollHandle) clearInterval(pollHandle);
-  pollHandle = setInterval(refresh, 4000);
-}
-
-async function init() {
-  await loadName();
-  await loadBoardState();
-  lastKnownSessionId = session ? session.id : null;
-  render();
-  startTicking();
-  startPolling();
-}
+function attachHandlers(){root.querySelectorAll('.dur-btn[data-min]').forEach(btn=>{if(btn.closest('#reqDurations'))return;btn.onclick=()=>bookSlot(parseInt(btn.dataset.min,10));});const endBtn=document.getElementById('endEarly');if(endBtn)endBtn.onclick=endSessionEarly;root.querySelectorAll('[data-accept]').forEach(btn=>btn.onclick=()=>acceptRequest(btn.dataset.accept));root.querySelectorAll('[data-decline]').forEach(btn=>btn.onclick=()=>declineRequest(btn.dataset.decline));const wrap=document.getElementById('reqDurations');if(wrap){wrap.querySelectorAll('.dur-btn').forEach(btn=>btn.onclick=()=>{pendingReqMinutes=parseInt(btn.dataset.min,10);render();});const reason=document.getElementById('reason');if(reason)reason.oninput=()=>pendingReqReason=reason.value;const send=document.getElementById('sendReq');if(send)send.onclick=()=>{if(pendingReqMinutes)sendInterruptRequest(pendingReqReason,pendingReqMinutes);};}}
+function startTicking(){if(tickHandle)clearInterval(tickHandle);tickHandle=setInterval(()=>{if(session)render();},1000);}
+function startPolling(){if(pollHandle)clearInterval(pollHandle);pollHandle=setInterval(refresh,4000);}
+async function init(){await loadName();await loadBoardState();lastKnownSessionId=session?session.id:null;render();startTicking();startPolling();}
 init();
 </script>
 </body>
