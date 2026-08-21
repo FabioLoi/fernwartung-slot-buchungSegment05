@@ -1071,8 +1071,15 @@ setInterval(async () => {
 
 setInterval(async () => {
   if (!isEditing()) {
+    const scrollPosition = window.scrollY;
+
     await loadBoard();
     render();
+
+    window.scrollTo({
+      top: scrollPosition,
+      behavior: "instant"
+    });
   }
 }, 4000);
 
