@@ -17,7 +17,6 @@
   --secondary: #005E46;
   --tertiary: #476E75;
   --success: #00893D;
-  --warning: #476E75;
   --danger: #00893D;
   --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -341,7 +340,35 @@ button.ghost:hover {
   min-height: 14px;
 }
 
-/* Kleines Statusfenster unten rechts */
+.history-list {
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.history-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.history-entry:last-child {
+  border-bottom: none;
+}
+
+.history-entry strong {
+  color: var(--text);
+}
+
+.history-entry span,
+.history-entry small {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
 .mini-status {
   position: fixed;
   right: 14px;
@@ -398,6 +425,7 @@ button.ghost:hover {
 <body>
 <div class="app">
   <div class="eyebrow">Segment 05 ALDS PC</div>
+
   <h1>Wer ist gerade auf dem PC?</h1>
 
   <div id="root"></div>
@@ -433,6 +461,7 @@ const DURATIONS = [1, 2, 5, 10, 20, 30];
 let myName = "";
 let session = null;
 let requests = [];
+let history = [];
 let pendingReqMinutes = null;
 let pendingReqReason = "";
 
@@ -443,23 +472,25 @@ const miniToggle = document.getElementById("miniToggle");
 const miniContent = document.getElementById("miniContent");
 
 function uid() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  return Date.now().toString(36) +
+    Math.random().toString(36).slice(2, 8);
 }
 
-function fmt(ms) {
-  ms = Math.max(0, ms);
+function fmt(milliseconds) {
+  milliseconds = Math.max(0, milliseconds);
 
-  const totalSeconds = Math.floor(ms / 1000);
+  const totalSeconds = Math.floor(milliseconds / 1000);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
 
-  return String(minutes).padStart(2, "0") + ":" +
-         String(seconds).padStart(2, "0");
+  return String(minutes).padStart(2, "0") +
+    ":" +
+    String(seconds).padStart(2, "0");
 }
 
-function sameName(a, b) {
-  return (a || "").trim().toLowerCase() ===
-         (b || "").trim().toLowerCase();
+function sameName(first, second) {
+  return (first || "").trim().toLowerCase() ===
+    (second || "").trim().toLowerCase();
 }
 
 function escapeHtml(value) {
@@ -473,26 +504,57 @@ function isEditing() {
 
   return active &&
     root.contains(active) &&
-    (active.tagName === "INPUT" || active.tagName === "TEXTAREA");
+    (
+      active.tagName === "INPUT" ||
+      active.tagName === "TEXTAREA"
+    );
+}
+
+function formatHistoryTime(timestamp) {
+  return new Date(timestamp).toLocaleString(
+    "de-DE",
+    {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    }
+  );
 }
 
 async function loadBoard() {
   try {
     const response = await fetch("/api/board");
 
-    if (response.ok) {
-      const data = await response.json();
-      session = data.session || null;
-      requests = data.requests || [];
+    if (!response.ok) {
+      throw new Error("Board konnte nicht geladen werden");
     }
+
+    const data = await response.json();
+
+    session = data.session || null;
+    requests = Array.isArray(data.requests)
+      ? data.requests
+      : [];
+
+    history = Array.isArray(data.history)
+      ? data.history
+      : [];
   } catch (error) {
-    statusNote.textContent = "Server momentan nicht erreichbar.";
+    statusNote.textContent =
+      "Server momentan nicht erreichbar.";
   }
 }
 
-async function saveBoard(newSession, newRequests) {
+async function saveBoard(
+  newSession,
+  newRequests,
+  newHistory = history
+) {
   session = newSession;
   requests = newRequests;
+  history = newHistory;
 
   try {
     const response = await fetch("/api/board", {
@@ -502,7 +564,8 @@ async function saveBoard(newSession, newRequests) {
       },
       body: JSON.stringify({
         session,
-        requests
+        requests,
+        history
       })
     });
 
@@ -510,24 +573,30 @@ async function saveBoard(newSession, newRequests) {
       throw new Error("Speichern fehlgeschlagen");
     }
   } catch (error) {
-    statusNote.textContent = "Speichern fehlgeschlagen.";
+    statusNote.textContent =
+      "Speichern fehlgeschlagen.";
   }
 }
 
-function updateMiniStatus() {
-  if (!session) {
-    miniContent.innerHTML =
-      '<b style="color:var(--primary)">PC frei</b>';
-    return;
-  }
-
-  miniContent.innerHTML =
-    "Belegt von <b>" +
-    escapeHtml(session.user) +
-    "</b><br>" +
-    '<span class="mini-time">' +
-    fmt(session.endTime - Date.now()) +
-    "</span> verbleibend";
+function createHistoryEntry(
+  currentSession,
+  finishedAt,
+  reason
+) {
+  return {
+    id: uid(),
+    user: currentSession.user,
+    startTime: currentSession.startTime,
+    endTime: finishedAt,
+    bookedDuration: currentSession.duration,
+    actualDuration: Math.max(
+      0,
+      Math.round(
+        (finishedAt - currentSession.startTime) / 60000
+      )
+    ),
+    reason
+  };
 }
 
 async function bookSlot(minutes) {
@@ -541,14 +610,37 @@ async function bookSlot(minutes) {
       startTime: now,
       endTime: now + minutes * 60000
     },
-    []
+    [],
+    history
   );
 
   render();
 }
 
-async function endSession() {
-  await saveBoard(null, []);
+async function endSession(
+  reason = "vorzeitig beendet"
+) {
+  if (!session) return;
+
+  const finishedAt = Date.now();
+
+  const entry = createHistoryEntry(
+    session,
+    finishedAt,
+    reason
+  );
+
+  const updatedHistory = [
+    entry,
+    ...history
+  ].slice(0, 100);
+
+  await saveBoard(
+    null,
+    [],
+    updatedHistory
+  );
+
   render();
 }
 
@@ -561,19 +653,25 @@ async function sendRequest(minutes) {
     id: uid(),
     sessionId: session.id,
     fromUser: myName,
-    reason: reasonElement ? reasonElement.value.trim() : "",
+    reason: reasonElement
+      ? reasonElement.value.trim()
+      : pendingReqReason,
     minutes,
     status: "pending",
     timestamp: Date.now()
   };
 
   const currentRequests = requests.filter(
-    requestItem => requestItem.sessionId === session.id
+    item => item.sessionId === session.id
   );
 
   currentRequests.push(request);
 
-  await saveBoard(session, currentRequests);
+  await saveBoard(
+    session,
+    currentRequests,
+    history
+  );
 
   pendingReqMinutes = null;
   pendingReqReason = "";
@@ -582,7 +680,9 @@ async function sendRequest(minutes) {
 }
 
 async function acceptRequest(requestId) {
-  const request = requests.find(item => item.id === requestId);
+  const request = requests.find(
+    item => item.id === requestId
+  );
 
   if (!request) return;
 
@@ -596,7 +696,8 @@ async function acceptRequest(requestId) {
       startTime: now,
       endTime: now + request.minutes * 60000
     },
-    []
+    [],
+    history
   );
 
   render();
@@ -605,10 +706,28 @@ async function acceptRequest(requestId) {
 async function declineRequest(requestId) {
   await saveBoard(
     session,
-    requests.filter(item => item.id !== requestId)
+    requests.filter(item => item.id !== requestId),
+    history
   );
 
   render();
+}
+
+function updateMiniStatus() {
+  if (!session) {
+    miniContent.innerHTML =
+      '<b style="color:var(--primary)">PC frei</b>';
+
+    return;
+  }
+
+  miniContent.innerHTML =
+    "Belegt von <b>" +
+    escapeHtml(session.user) +
+    "</b><br>" +
+    '<span class="mini-time">' +
+    fmt(session.endTime - Date.now()) +
+    "</span> verbleibend";
 }
 
 function render() {
@@ -618,8 +737,16 @@ function render() {
     root.innerHTML = `
       <div class="name-gate">
         <p>Bitte gib deinen Namen ein.</p>
-        <input id="nameInput" type="text" placeholder="Dein Name">
-        <button class="primary" id="nameSubmit">Weiter</button>
+
+        <input
+          id="nameInput"
+          type="text"
+          placeholder="Dein Name"
+        >
+
+        <button class="primary" id="nameSubmit">
+          Weiter
+        </button>
       </div>
     `;
 
@@ -647,7 +774,8 @@ function render() {
   }
 
   const isFree = !session;
-  const isMine = session && sameName(session.user, myName);
+  const isMine = session &&
+    sameName(session.user, myName);
 
   const relevantRequests = requests.filter(request =>
     session &&
@@ -655,21 +783,21 @@ function render() {
     request.status === "pending"
   );
 
-  let remaining = "";
   let percentage = 100;
-  let label = "PC frei";
+  let timeLabel = "";
+  let sessionLabel = "PC frei";
 
   if (session) {
     const total = session.endTime - session.startTime;
-    const remainingMs = session.endTime - Date.now();
+    const remaining = session.endTime - Date.now();
 
-    remaining = fmt(remainingMs);
     percentage = Math.max(
       0,
-      Math.min(100, (remainingMs / total) * 100)
+      Math.min(100, (remaining / total) * 100)
     );
 
-    label = "Belegt von " + session.user;
+    timeLabel = fmt(remaining);
+    sessionLabel = "Belegt von " + session.user;
   }
 
   let html = `
@@ -678,16 +806,22 @@ function render() {
         class="ring"
         style="
           --pct:${percentage};
-          --ring-color:${session ? "var(--secondary)" : "var(--primary)"};
+          --ring-color:${
+            session
+              ? "var(--secondary)"
+              : "var(--primary)"
+          };
         "
       >
         <div class="ring-core">
           <div class="ring-dot"></div>
+
           <div class="ring-time">
-            ${session ? remaining : "FREI"}
+            ${session ? timeLabel : "FREI"}
           </div>
+
           <div class="ring-label">
-            ${escapeHtml(label)}
+            ${escapeHtml(sessionLabel)}
           </div>
         </div>
       </div>
@@ -698,6 +832,7 @@ function render() {
     html += `
       <div class="panel">
         <h2>Slot buchen</h2>
+
         <label>Dauer wählen</label>
 
         <div class="duration-grid">
@@ -717,8 +852,12 @@ function render() {
       <div class="panel">
         <h2>Deine Sitzung</h2>
 
-        <div class="empty-note">
-          Dauer: ${session.duration} Min · verbleibend ${remaining}
+        <div
+          class="empty-note"
+          style="text-align:left"
+        >
+          Dauer: ${session.duration} Min ·
+          verbleibend ${timeLabel}
         </div>
 
         <button class="ghost" id="endSession">
@@ -731,7 +870,11 @@ function render() {
 
         ${
           relevantRequests.length === 0
-            ? '<div class="empty-note">Keine offenen Anfragen</div>'
+            ? `
+              <div class="empty-note">
+                Keine offenen Anfragen
+              </div>
+            `
             : relevantRequests.map(request => `
               <div class="req-card">
                 <div class="who">
@@ -775,6 +918,7 @@ function render() {
         <h2>Unterbrechung anfragen</h2>
 
         <label>Begründung</label>
+
         <textarea
           id="reason"
           placeholder="Warum brauchst du den PC gerade?"
@@ -786,7 +930,9 @@ function render() {
           ${DURATIONS.map(duration => `
             <button
               class="dur-btn ${
-                pendingReqMinutes === duration ? "selected" : ""
+                pendingReqMinutes === duration
+                  ? "selected"
+                  : ""
               }"
               data-request="${duration}"
             >
@@ -805,6 +951,43 @@ function render() {
       </div>
     `;
   }
+
+  html += `
+    <div class="panel">
+      <h2>Buchungshistorie</h2>
+
+      ${
+        history.length === 0
+          ? `
+            <div class="empty-note">
+              Noch keine abgeschlossenen Sitzungen
+            </div>
+          `
+          : `
+            <div class="history-list">
+              ${history.map(entry => `
+                <div class="history-entry">
+                  <strong>
+                    ${escapeHtml(entry.user)}
+                  </strong>
+
+                  <span>
+                    ${formatHistoryTime(entry.startTime)}
+                    –
+                    ${formatHistoryTime(entry.endTime)}
+                  </span>
+
+                  <small>
+                    Gebucht: ${entry.bookedDuration} Min ·
+                    genutzt: ${entry.actualDuration} Min
+                  </small>
+                </div>
+              `).join("")}
+            </div>
+          `
+      }
+    </div>
+  `;
 
   root.innerHTML = html;
 
@@ -829,7 +1012,8 @@ function render() {
     };
   }
 
-  const sendRequestButton = document.getElementById("sendRequest");
+  const sendRequestButton =
+    document.getElementById("sendRequest");
 
   if (sendRequestButton) {
     sendRequestButton.onclick = () => {
@@ -839,10 +1023,13 @@ function render() {
     };
   }
 
-  const endSessionButton = document.getElementById("endSession");
+  const endSessionButton =
+    document.getElementById("endSession");
 
   if (endSessionButton) {
-    endSessionButton.onclick = endSession;
+    endSessionButton.onclick = () => {
+      endSession("vorzeitig beendet");
+    };
   }
 
   root.querySelectorAll("[data-accept]").forEach(button => {
@@ -860,7 +1047,7 @@ function render() {
   updateMiniStatus();
 }
 
-document.getElementById("miniToggle").onclick = () => {
+miniToggle.onclick = () => {
   miniStatus.classList.remove("hidden");
   miniToggle.classList.add("hidden");
 };
@@ -872,7 +1059,7 @@ document.getElementById("miniClose").onclick = () => {
 
 setInterval(async () => {
   if (session && session.endTime <= Date.now()) {
-    await endSession();
+    await endSession("automatisch abgelaufen");
   } else {
     if (session && !isEditing()) {
       render();
@@ -890,7 +1077,12 @@ setInterval(async () => {
 }, 4000);
 
 (async function init() {
-  myName = localStorage.getItem(NAME_KEY) || "";
+  try {
+    myName = localStorage.getItem(NAME_KEY) || "";
+  } catch (error) {
+    myName = "";
+  }
+
   await loadBoard();
   render();
 })();
