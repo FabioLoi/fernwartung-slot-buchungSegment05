@@ -633,7 +633,7 @@ async function endSession(
   const updatedHistory = [
     entry,
     ...history
-  ].slice(0, 100);
+  ].slice(0, 20);
 
   await saveBoard(
     null,
